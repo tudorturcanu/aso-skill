@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate SKILL.md and evals
+        run: |
+          python3 - <<'PY'
+          import json, os, re, sys
+          p = "skills/aso/SKILL.md"
+          assert os.path.exists(p), f"{p} not found"
+          content = open(p).read()
+          assert content.startswith("---\n"), "SKILL.md must start with YAML frontmatter"
+          
+          evals_path = "skills/aso/evals/evals.json"
+          assert os.path.exists(evals_path), f"{evals_path} not found"
+          data = json.load(open(evals_path))
+          assert "evals" in data and len(data["evals"]) > 0, "evals.json must contain evals"
+          
+          print(f"Validated aso skill ({len(content.splitlines())} lines, {len(data['evals'])} evals)")
+          PY
